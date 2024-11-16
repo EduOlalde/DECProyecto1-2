@@ -8,14 +8,13 @@
     <script src="./script.js"></script>
 </head>
 <body>
-    <div id="login">
+    <div id="pantallaLogin">
         <h2>Caza del Tesoro</h2>
-        <form id="formJuego">
+        <form id="formLogin">
             <input type="text" id="nombreUsuario" name="nombreUsuario" placeholder="Nombre de usuario" required>
             <div>
                 <button type="button" id="botonValidar" onclick="iniciarJuego()">Validar</button>
-                <!-- CAMBIAR DISABLED A TRUE!!!!-->
-                <button type="button" id="botonJugar" disabled="false" onclick="pulsarJugar()">Jugar</button>
+                <button type="button" id="botonJugar" disabled="true" onclick="pulsarJugar()">Jugar</button>
             </div>
         </form>
     </div>
