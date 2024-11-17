@@ -1,42 +1,78 @@
 /*----- Inicialización y configuración -----*/
 
-// Definición del objeto datosJuego
-function datosJuego(){
-    this.nombre;
-    this.numeroTiradas = 0;
-}
+// Definición de variables y objetos globales
+let nombre = '';
+let numeroTiradas = 0;
+const posicionHeroe = [];
+const posicionCofre = [];
 
-/* Función que valida el nombre de usuario */
-function validarNombre(input){  
-    return /^[A-Za-z]{4,}$/.test(input);
+/* Objeto que devuelve dinámicamente mediante métodos distintos elementos del documento 
+para simplificar las instrucciones del resto de funciones. 
+Esto centraliza todas las referencias al DOM para simplificar el código y facilita el 
+mantenimiento en caso de cambios */
+const IU = {
+
+    //Pantallas principales
+    pantallaLogin: () => document.getElementById("pantallaLogin"),
+    pantallaJuego: () => document.getElementById("pantallaJuego"),
+
+    // Formulario de login
+    botonJugar: () => document.getElementById("botonJugar"),
+    nombreUsuario: () => document.getElementById("nombreUsuario").value,
+    mensajeLogin: () => document.getElementById("mensajeLogin"),
+
+    // Elementos del juego
+    formLogin: () => document.getElementById("formLogin"),
+    contenedorTablero: () => document.getElementById("contenedorTablero"),
+    tablero: () => document.getElementById("tablero"),
+    contenedorDado: () => document.getElementById("contenedorDado"),
+    dado: () => document.getElementById("dado"),
+    botonTirar: () => document.getElementById("botonTirar"),
+    mensajeJuego: () => document.getElementById("mensajeJuego"),
+    contenedorJuego: () => document.getElementById("contenedorJuego"),
+    contenedorBotonNuevaPartida: () => document.getElementById("contenedorBotonNuevaPartida"),
+
+    // Gráficos
+    heroe: () => document.getElementById("heroe"),
+    cofre: () => document.getElementById("cofre"),
+
+};
+
+/* Función que valida el nombre de usuario y devuelve true o mensajes basados en los fallos de 
+validación */
+function validarNombre(input){
+    let mensaje = '';  
+    if(!input) {
+        mensaje += "El nombre no puede estar vacío.";
+    }
+    else{
+        if (input.length < 4) mensaje += "El nombre debe tener 4 o más letras.\n";
+        if (/\d/.test(input)) mensaje += "Números no permitidos.";
+    }
+    
+    return mensaje == '' ? true : mensaje;
 }
 
 /* Función que habilita el botón jugar si el nombre de usuario es válido.
 Muestra mensajes de error en caso de que el usaurio introducido no sea válido */
 function iniciarJuego(){
-    let boton = document.getElementById("botonJugar");
-    let formLogin = document.getElementById("nombreUsuario");
 
     /* En caso de que ya exista el elemento mensaje, se elimina para evitar duplicados */
-    if(document.getElementById("mensajeLogin")) {
-        const mensaje = document.getElementById("mensajeLogin");
-        mensaje.remove();
-    }
+    if(IU.mensajeLogin()) IU.mensajeLogin().remove();
 
     const mensaje = document.createElement("p");
     mensaje.id = "mensajeLogin";
 
-    if(validarNombre(formLogin.value)){
-        boton.disabled = false; 
-        mensaje.textContent = `¡A luchar, héroe ${formLogin.value}!`;
+    const validacion = validarNombre(IU.nombreUsuario());
+
+    if(validacion === true){
+        IU.botonJugar().disabled = false; 
+        nombre = IU.nombreUsuario();
+        mensaje.textContent = `¡A luchar, héroe ${nombre}!`;
     }
     else{
-        boton.disabled = true;
-        if(/\d/.test(formLogin.value)){ 
-            mensaje.textContent = "Números no permitidos";
-        }
-        else
-            mensaje.textContent = "El nombre debe tener 4 o más letras"; 
+        IU.botonJugar().disabled = true;
+        mensaje.textContent = validacion;
     }
           
     formLogin.insertAdjacentElement('afterend', mensaje);
@@ -44,130 +80,172 @@ function iniciarJuego(){
 }
 
 /* Función que oculta la pantalla de introducción de usuario y genera y muestra la
-pantalla de juego. Recoje el nombre de usuario en el objeto datosJuego */
+pantalla de juego. Recoge el nombre de usuario e inicia el número de tiradas a 0 */
 function pulsarJugar(){
-    document.getElementById("pantallaLogin").style.display = "none";
-    datosJuego.nombre = document.getElementById("nombreUsuario").value;
-    datosJuego.numeroTiradas = 0;
+    IU.pantallaLogin().style.display = "none";
+    nombre = IU.nombreUsuario();
+    numeroTiradas = 0;
 
-    let contenedor = document.createElement("div");
-    contenedor.id = "pantallaJuego";
-    document.body.appendChild(contenedor);
+    mostrarJuego();
+}
 
+/*----- Finalización y reinicio -----*/
+
+function victoria(){
+    IU.contenedorDado().style.display = "none";
+
+    const mensaje = IU.mensajeJuego();
+    mensaje.textContent = `¡Enhorabuena ${nombre}, eres rico!\n`;
+
+    let mapa = recuperarMapaLocal("recordTiradas");
+    mapa.set(`${nombre}`, `${numeroTiradas}`);
+
+    guardarenLocal("recordTiradas", serializarMapa(mapa));
+
+    const mensajeRecord = document.createElement("div");
+    mensajeRecord.id = "mensajeRecord";
+    mensaje.insertAdjacentElement('afterend', mensajeRecord);
+    
+    mensaje.textContent += esRecord(nombre) ?  
+        `¡Tienes el record con ${numeroTiradas} tiradas!`:
+        `Has necesitado ${numeroTiradas} tiradas para encontrar el tesoro`;
+    
+    generarBotonNuevaPartida();
+    
+}
+/* Función que devuelve los elementos necesarios a su estado inicial para una nueva partida */
+function nuevaPartida(){
+    reiniciarEstado();
+    IU.pantallaJuego().style.display = "none";
+    IU.pantallaLogin().style.display = "block";
+    IU.contenedorDado().style.display = "block";
+    IU.botonJugar().disabled = true;
+    IU.formLogin().reset();
+
+    // Eliminación de elentos si existen
+    if(IU.tablero) IU.tablero().remove();
+    if(IU.contenedorBotonNuevaPartida()) IU.contenedorBotonNuevaPartida().remove();
+    if(IU.mensajeLogin()) IU.mensajeLogin().remove();
+}
+
+/* Reinicio de los datos de juego */
+function reiniciarEstado(){
+    nombre = '';
+    numeroTiradas = 0;
+}
+
+/*----- Generación y gestión de la IU -----*/
+
+/* Función que muestra la pantalla de juego y genera los elementos necesarios */
+function mostrarJuego(){
+    IU.pantallaJuego().style.display = "block";
+    definirMensajeJuego();
     generarTablero();
-    generarBotonTirar();
-    generarMensajeJuego();
+    insertarGraficos();
+    configurarBotonTirar();
+}
+
+/* Función que configura el mensaje mostrado durante la partida */
+function definirMensajeJuego(){
+    const mensaje = IU.mensajeJuego();
+    mensaje.textContent = `Adelante ${nombre}, grandes riquezas te esperan...`;
 
 }
 
-/*----- Generación y gestión de la interfaz -----*/
-
-function generarMensajeJuego(){
-    let contenedorMensaje = document.createElement("div");
-    contenedorMensaje.id = "contenedorMensaje";
-
-    let mensaje = document.createElement("h2");
-    mensaje.id = "mensajeJuego";
-    mensaje.textContent = `Adelante ${datosJuego.nombre}, grandes riquezas te esperan...`;
-    contenedorMensaje.appendChild(mensaje);
-
-    contenedorJuego.insertAdjacentElement('beforeBegin', contenedorMensaje);
-
-}
-
-function generarBotonNuevaPartida(){
-    let contenedor = document.createElement("div");
-    contenedor.id = "contenedorBotonNuevaPartida";
-
-    let boton = document.createElement("button");
-    boton.id = "botonNuevaPartida";
-    boton.type = "button";
-    boton.textContent = "Jugar de nuevo";
-    boton.addEventListener("click", nuevaPartida);
-    contenedor.appendChild(boton);
-
-    document.getElementById("contenedorJuego").insertAdjacentElement('afterend', contenedor);
+/* Función que genera los elementos de juego (tablero, botones, elementos gráficos) */
+function generarTablero(){
+    const tablero = crearTabla(10,10);
+    tablero.id = "tablero";
+    IU.contenedorTablero().appendChild(tablero);
 }
 
 /* Función que genera una tabla de x filas e y columnas, identificado
 cada celda con un string de formato "x-y" */
 function crearTabla(x, y){
-    const tabla = document.createElement("table");
-
+    let cadenaTabla = '';
+    
     for(let i=1; i <= x; i++){
-        let fila = document.createElement("tr");
+        cadenaTabla += '<tr>';
         for(let j=1; j <= y; j++){
-            let celda = document.createElement("td");
-            celda.id = `${i}-${j}`;
-            celda.textContent = ``;
-
-            fila.appendChild(celda);
+            cadenaTabla += `<td id="${i}-${j}"></td>`;
         }
-        tabla.appendChild(fila);
+        cadenaTabla += '</tr>'
     }
 
+    const tabla = document.createElement("table");
+    tabla.innerHTML = cadenaTabla;
     return tabla;
-}
-
-/* Función que genera los elementos de juego (tablero, botones, elementos gráficos) */
-function generarTablero(){
-    const contenedorJuego = document.createElement("div");
-    contenedorJuego.id = "contenedorJuego";
-
-    const tablero = crearTabla(10,10);
-    tablero.id = "tablero";
-    contenedorJuego.appendChild(tablero);
-
-    document.getElementById("pantallaJuego").appendChild(contenedorJuego);
-
-    insertarGraficos();
 }
 
 /* Función que crea los elementos gráficos del tablero de juego y los inserta
 en el documento */
 function insertarGraficos(){
+    /* Se crean los elementos gráficos del juego, o se seleccionan si ya existen, y se
+    declaran sus propiedades */
+
     /* Se selecciona la última celda del tablero y se extraen sus coordenadas
     para insertar el cofre en ella independientemente del tamaño del tablero */
-    let ultimaCelda = document.querySelector("#tablero tr:last-child td:last-child").id.split("-");
-    let celdaCofre = document.getElementById(`${ultimaCelda[0]}-${ultimaCelda[1]}`);
-
-    let celdaInicio = document.getElementById("1-1");
-
-    let cofre = document.createElement("img");
+    const ultimaCelda = IU.tablero().querySelector("tr:last-child td:last-child").id.split("-");
+    
+    let cofre;
+    if(IU.cofre()) {
+        cofre = IU.cofre();
+    }  
+    else {
+        cofre = document.createElement("img");
+        document.getElementById(`${ultimaCelda[0]}-${ultimaCelda[1]}`).appendChild(cofre);
+    }
     cofre.id = "cofre"
     cofre.src = "./img/cofre.png";
-    cofre.setAttribute("posicion", `${ultimaCelda[0]}-${ultimaCelda[1]}`);
+    posicionCofre[0] = parseInt(ultimaCelda[0]);
+    posicionCofre[1] = parseInt(ultimaCelda[1]);
 
-    let heroe = document.createElement("img");
+    /* Se inserta el héroe en la primera celda */
+    let heroe;
+    if(IU.heroe()) {
+        heroe = IU.heroe();
+    }
+    else {
+        heroe = document.createElement("img");
+        document.getElementById("1-1").appendChild(heroe);
+    }
     heroe.id = "heroe";
     heroe.src = "./img/heroe.svg";
-    heroe.setAttribute("posicion", `1-1`);
-
-    celdaCofre.appendChild(cofre);
-    celdaInicio.appendChild(heroe);
+    posicionHeroe[0] = 1;
+    posicionHeroe[1] = 1;
 }
 
-/* Función que genera los elementos del botón de tirada de dado y los inserta
-en el documento */
-function generarBotonTirar(){
-    let contenedorDados = document.createElement("div");
-    contenedorDados.id = "contenedorDado";
-
-    let imagenDado = document.createElement("img");
-    imagenDado.id = "dado";
-    contenedorDados.appendChild(imagenDado);
-
-    let boton = document.createElement("button");
-    boton.id = "botonTirar";
-    boton.type = "button";
-    boton.textContent = "Tirar";
+/* Función que configura los elementos del botón de tirada de dado */
+function configurarBotonTirar(){
+    const boton = IU.botonTirar();
+    boton.removeEventListener("click", tirarDado);
     boton.addEventListener("click", tirarDado);
-    contenedorDados.appendChild(boton);
-
-    document.getElementById("contenedorJuego").appendChild(contenedorDados);
 }
 
+/* Función que devuelve una sección contenedora de un botón generado a partir de los parámetros */
+function generarBoton(contenedorID, botonID, texto, funcionDisparada){
+    const contenedor = document.createElement("div");
+    contenedor.id = contenedorID;
 
+    const boton = document.createElement("button");
+    boton.id = botonID;
+    boton.type = "button";
+    boton.textContent = texto;
+    boton.addEventListener("click", funcionDisparada);
+    contenedor.appendChild(boton);
+
+    return contenedor;
+}
+
+/* Función que crea e inserta un botón que reinicia la partida */
+function generarBotonNuevaPartida(){
+    const boton = generarBoton(
+        "contenedorBotonNuevaPartida", 
+        "botonNuevaPartida", 
+        "Jugar de nuevo", 
+        nuevaPartida);
+    IU.contenedorJuego().insertAdjacentElement('afterend', boton);
+}
 
 /*----- Lógica del juego -----*/
 
@@ -175,44 +253,37 @@ function generarBotonTirar(){
 selecciona la imagen asignada al dado, y modifica las celdas para las que la tirada
 permite el movimiento */
 function tirarDado(ev){
-    datosJuego.numeroTiradas += 1;
+    numeroTiradas += 1;
     let tirada = parseInt(Math.random()*6 + 1);
-    let imagenDado = document.getElementById("dado");
+    const imagenDado = IU.dado();
     imagenDado.src = `./img/dado${tirada}.png`;
     
     ev.currentTarget.disabled = true;
     resaltarCeldas(tirada);
 }
 
-/* Función que recoje el resultado de una tirada de dado, recoje la posición actual
+/* Función que recoge el resultado de una tirada de dado, recoge la posición actual
 del personaje, y a partir de esos datos modifica las celdas apropiadas a la tirada
 asignádolas la clase "celdaResaltada" */
 function resaltarCeldas(tirada){
-    /* Se recoje el elemento img del personaje */
-    let heroe = document.getElementById("heroe");
-    /* Se recoje en formato numérico en un array la posición actual del héroe
-    en el mapa */
-    let posHeroe = heroe.getAttribute("posicion").split("-");
-    posHeroe = [parseInt(posHeroe[0]), parseInt(posHeroe[1])];
-
     /* En cada eje, horizontal y vertical, se aplica la clase "celdaResaltada"
     a cada elemento de la tabla desde la posición actual hasta posición +/- tirada 
     Se controla que sólo se aplique a elementos que existen */   
     for(let i = 1; i <= tirada; i++){
  
-        let celdaDerecha = document.getElementById(`${posHeroe[0] + i}-${posHeroe[1]}`);
+        const celdaDerecha = document.getElementById(`${posicionHeroe[0] + i}-${posicionHeroe[1]}`);
         if(celdaDerecha)
             celdaDerecha.className=("celdaResaltada");
 
-        let celdaIzquierda = document.getElementById(`${posHeroe[0]-i}-${posHeroe[1]}`);
+        const celdaIzquierda = document.getElementById(`${posicionHeroe[0]-i}-${posicionHeroe[1]}`);
         if(celdaIzquierda)
             celdaIzquierda.className=("celdaResaltada");
 
-        let celdaSuperior = document.getElementById(`${posHeroe[0]}-${posHeroe[1] + i}`);
+        const celdaSuperior = document.getElementById(`${posicionHeroe[0]}-${posicionHeroe[1] + i}`);
         if(celdaSuperior)
             celdaSuperior.className=("celdaResaltada");
 
-        let celdaInferior = document.getElementById(`${posHeroe[0]}-${posHeroe[1]- i}`);
+        const celdaInferior = document.getElementById(`${posicionHeroe[0]}-${posicionHeroe[1]- i}`);
         if(celdaInferior)
             celdaInferior.className=("celdaResaltada");
     }
@@ -222,7 +293,7 @@ function resaltarCeldas(tirada){
 
 /* Función que añade un event listener de click a cada celda de clase "celdaResaltada" */
 function habilitarClick(){
-    let celdas = document.getElementsByClassName("celdaResaltada");
+    const celdas = document.getElementsByClassName("celdaResaltada");
      
     for (let celda of celdas){
         celda.addEventListener("click", controlClick);
@@ -235,21 +306,23 @@ function controlClick(ev){
     moverHeroe(ev.currentTarget);
 }
 
+function esVictoria(posicionHeroe, posicionCofre){
+    return posicionHeroe[0] == posicionCofre[0] && posicionHeroe[1] == posicionCofre[1];
+}
+
 /* Función que elimina el gráfico del personaje de su posición actual, lo coloca
-en la celda que ha sido pulsada, y ejecuta la función esperarTirada() */
+en la celda que ha sido pulsada, comprueba si se ha alcanzado el objetivo, en cuyo caso
+ejecuta la función victoria(), y ejecuta la función esperarTirada() */
 function moverHeroe(celda){
-    let heroe = document.getElementById("heroe");
+    const heroe = IU.heroe();
     heroe.remove();
     celda.appendChild(heroe);
 
-    let posHeroe= celda.id.split("-");
-    heroe.setAttribute("posicion", `${posHeroe[0]}-${posHeroe[1]}`);
+    const posActual = celda.id.split("-");
+    posicionHeroe[0] = parseInt(posActual[0]);
+    posicionHeroe[1] = parseInt(posActual[1]);
 
-    let posCofre = document.getElementById("cofre").getAttribute("posicion").split("-");
-
-    if((posHeroe[0] == posCofre[0]) && (posHeroe[1] == posCofre[1])){
-        victoria();
-    }
+    if((esVictoria(posicionHeroe, posicionCofre))) victoria();
     
     esperarTirada();
 }
@@ -257,9 +330,9 @@ function moverHeroe(celda){
 /* Función que reinicia el tablero a la espera de una tirada ejecutando
 la función reiniciarCelda() para cada celda resaltada */
 function esperarTirada(){
-    let celdas = Array.from(document.getElementsByClassName("celdaResaltada"));
-    for(let celda of celdas) reiniciarCelda(celda);
-    document.getElementById("botonTirar").disabled = false;
+    const celdas = Array.from(document.getElementsByClassName("celdaResaltada"));
+    celdas.forEach(celda => reiniciarCelda(celda));
+    IU.botonTirar().disabled = false;
     
 }
 
@@ -269,42 +342,6 @@ function reiniciarCelda(celda){
     celda.removeEventListener("click", controlClick);
     celda.classList.remove("celdaResaltada");
     
-}
-
-
-/*----- Finalización y reinicio -----*/
-
-function victoria(){
-    document.getElementById("contenedorDado").style.display = "none";
-
-    let mensaje = document.getElementById("mensajeJuego");
-    mensaje.textContent = `¡Enhorabuena ${datosJuego.nombre}, eres rico!`;
-
-    let mapa = recuperarMapaLocal("recordTiradas");
-    mapa.set(`${datosJuego.nombre}`, `${datosJuego.numeroTiradas}`);
-
-    guardarenLocal("recordTiradas", serializarMapa(mapa));
-
-    let mensajeRecord = document.createElement("div");
-    mensajeRecord.id = "mensajeRecord";
-    mensaje.insertAdjacentElement('afterend', mensajeRecord);
-    
-    mensajeRecord.textContent = esRecord(datosJuego.nombre) ?  
-        `¡Tienes el record con ${datosJuego.numeroTiradas} tiradas!`:
-        `Has necesitado ${datosJuego.numeroTiradas} tiradas para encontrar el tesoro`;
-    
-    generarBotonNuevaPartida();
-    
-}
-
-function nuevaPartida(){
-    document.getElementById("pantallaJuego").remove();
-    document.getElementById("mensajeLogin").remove();
-    document.getElementById("formLogin").reset();
-    document.getElementById("pantallaLogin").style.display = "block";
-
-    datosJuego.nombre = '';
-    datosJuego.numeroTiradas = 0;
 }
 
 /*----- Almacenamiento y puntuaciones -----*/
@@ -330,7 +367,7 @@ function serializarMapa(mapa){
 
     cadena = aPar2.join(";");
 
-return cadena;
+    return cadena;
 }
 
 /* Función que genera un mapa a partir del valor de una entrada tipo cadena de caracteres
@@ -342,13 +379,12 @@ function deserializarMapa(entrada){
     for(let el of entrada){
         el = el.split("=");
         mapa.set(el[0], el[1]);
-
     }
 
-return mapa;
+    return mapa;
 }
 
-/* Función que recoje un mapa guardado en el almacenamiento local con clave "entrada", o devuelve
+/* Función que recoge un mapa guardado en el almacenamiento local con clave "entrada", o devuelve
 un mapa vacío si la clave no existe o está vacía */
 function recuperarMapaLocal(clave){
 
@@ -358,7 +394,7 @@ function recuperarMapaLocal(clave){
         mapa = deserializarMapa(localStorage.getItem(clave));
     }
 
-return mapa;
+    return mapa;
 }
 
 /* Función que guarda una entrada en el almacenamiento local si es accesible */
@@ -366,8 +402,8 @@ function guardarenLocal(clave, valor){
     try{
         localStorage.setItem(`${clave}`, `${valor}`);
     }
-    catch(e){
-        console.log("Almacenamiento local inaccesible.");
+    catch{
+        console.error("No se pudo acceder al almacenamiento local.");
     }
     
 }
