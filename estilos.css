@@ -10,7 +10,8 @@ body {
 }
 
 #pantallaLogin {
-    display: block;
+    display: flex;
+    flex-direction: column;
     text-align: center;
     padding: 20px;
     background-color: #ffffff;
@@ -19,8 +20,18 @@ body {
     width: 300px;
 }
 
-#pantallaJuego{
-    display: none;
+#pantallaJuego {
+    display: none; 
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; 
+    width: 100%;
+    max-width: 800px; 
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 input[type="text"], button {
@@ -35,18 +46,18 @@ button {
     font-size: 16px;
     cursor: pointer;
     color: white;
+    background-color: #2196F3;
 }
 
-#botonValidar, #botonTirar {
+#botonValidar{
     background-color: #4CAF50;
 }
 
-#botonJugar {
-    background-color: #2196F3;
-}
-
-#botonNuevaPartida{
-    background-color: #2196F3;
+#botonTirar {
+    background-color: #4CAF50;
+    padding: 10px 20px;
+    width: 100%;
+    margin-top: 10px;
 }
 
 button:disabled {
@@ -59,40 +70,38 @@ button:disabled {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    width: 100%;
 }
 
 #contenedorJuego {
     display: flex;
-    gap: 20px; /* Espacio entre el tablero y el botón */
-    margin-top: 20px;
-}
-
-#contenedorBotonNuevaPartida{
-    margin: 20px;
+    justify-content: center;
+    align-items: flex-start; 
+    gap: 20px; 
+    width: 100%;
 }
 
 #tablero {
+    background-image: url("./img/cueva.png");
+    background-size: cover;
+    background-position: center;
     border-collapse: collapse;
-    width: 500px; /* Fijar el tamaño del tablero */
-    height: 500px; /* Fijar el tamaño del tablero */
+    width: 500px;
+    height: 500px;
 }
 
 #tablero td {
-    width: 50px;  /* Cada celda será de 50x50px */
+    width: 50px;
     height: 50px;
     border: 1px solid #444;
     text-align: center;
-    background-color: #A9A9A9; /* Color base de piedra */
-    background-image: linear-gradient(135deg, #B0B0B0 25%, transparent 25%, transparent 50%, #B0B0B0 50%, #B0B0B0 75%, transparent 75%, transparent);
-    background-size: 20px 20px;
     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
     position: relative;
 }
 
-#tablero td img{
-    width: 100%;   
-    height: 100%;  
+#tablero td img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     display: block;
     position: absolute;
@@ -101,33 +110,38 @@ button:disabled {
 }
 
 #contenedorDado {
-    align-self: flex-end; /* Coloca el botón en la parte inferior del contenedor */
-    padding: 10px 20px;
-    width: 100px; /* Tamaño fijo para el contenedor */
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centra la imagen dentro del contenedor */
-}
-
-#botonTirar {
-    align-self: flex-end; /* Coloca el botón en la parte inferior del contenedor */
-    padding: 10px 20px;
-    width: 100px; /* Tamaño fijo del botón */
-    margin-top: 30px;
+    align-self: center;
+    align-items: center;
+    width: 120px; 
+    gap: 10px;
 }
 
 #contenedorDado img {
-    width: 100%;  /* La imagen ocupa el 100% del contenedor */
-    height: 100%; /* La imagen ocupa el 100% del contenedor */
-    object-fit: cover; /* Ajusta la imagen sin distorsionarla */
+    width: 100px;  
+    height: 100px;
+    object-fit: cover; 
 }
 
-#tablero .celdaResaltada{
-    background-color: green;
+#botonTirar {
+    padding: 10px 20px;
+    width: 100%;
 }
 
-#contenedorMensaje{
+#contenedorMensaje {
     background-color: #f0f0f0;
     padding: 20px;
     text-align: center;
+    border-radius: 8px;
+    height: auto;
+}
+
+#tablero .celdaResaltada {
+    background: linear-gradient(
+        135deg,               
+        rgba(255, 0, 0, 0.3) 30%, 
+        transparent 70%        
+    );
+    z-index: 1;       
 }

@@ -1,15 +1,25 @@
 /*----- Inicialización y configuración -----*/
 
-// Definición de variables y objetos globales
-let nombre = '';
-let numeroTiradas = 0;
-const posicionHeroe = [];
-const posicionCofre = [];
+document.addEventListener("DOMContentLoaded", inicio);
 
-/* Objeto que devuelve dinámicamente mediante métodos distintos elementos del documento 
-para simplificar las instrucciones del resto de funciones. 
-Esto centraliza todas las referencias al DOM para simplificar el código y facilita el 
-mantenimiento en caso de cambios */
+// Definición de variables y objetos globales
+
+// Nombre del usuario
+let nombre = '';
+// Inicialización del contador de tiradas
+let numeroTiradas = 0;
+//Variables de posición de juego
+const posicionHeroe = [];
+const posicionObjetivo = [];
+
+/* Configuración de los botones tras la carga inicial del documento */
+function inicio(){
+    IU.botonValidar().addEventListener("click", iniciarJuego);
+    IU.botonJugar().addEventListener("click", pulsarJugar);
+}
+
+/* OObjeto para acceder dinámicamente a elementos del DOM.
+   Centraliza todas las referencias al DOM, facilitando su mantenimiento. */
 const IU = {
 
     //Pantallas principales
@@ -18,6 +28,7 @@ const IU = {
 
     // Formulario de login
     botonJugar: () => document.getElementById("botonJugar"),
+    botonValidar: () => document.getElementById("botonValidar"),
     nombreUsuario: () => document.getElementById("nombreUsuario").value,
     mensajeLogin: () => document.getElementById("mensajeLogin"),
 
@@ -25,6 +36,7 @@ const IU = {
     formLogin: () => document.getElementById("formLogin"),
     contenedorTablero: () => document.getElementById("contenedorTablero"),
     tablero: () => document.getElementById("tablero"),
+    celda: (x,y) => document.getElementById(`${x}-${y}`),
     contenedorDado: () => document.getElementById("contenedorDado"),
     dado: () => document.getElementById("dado"),
     botonTirar: () => document.getElementById("botonTirar"),
@@ -34,12 +46,11 @@ const IU = {
 
     // Gráficos
     heroe: () => document.getElementById("heroe"),
-    cofre: () => document.getElementById("cofre"),
+    objetivo: () => document.getElementById("objetivo"),
 
 };
 
-/* Función que valida el nombre de usuario y devuelve true o mensajes basados en los fallos de 
-validación */
+/* Valida el nombre de usuario y devuelve un mensaje de error `true` si es válido */
 function validarNombre(input){
     let mensaje = '';  
     if(!input) {
@@ -53,11 +64,10 @@ function validarNombre(input){
     return mensaje == '' ? true : mensaje;
 }
 
-/* Función que habilita el botón jugar si el nombre de usuario es válido.
-Muestra mensajes de error en caso de que el usaurio introducido no sea válido */
+/* Valida el nombre ingresado y habilita o deshabilita el botón "Jugar".
+   Muestra mensajes de error en caso de nombre inválido. */
 function iniciarJuego(){
-
-    /* En caso de que ya exista el elemento mensaje, se elimina para evitar duplicados */
+    // En caso de que ya exista el elemento mensaje, se elimina para evitar duplicados 
     if(IU.mensajeLogin()) IU.mensajeLogin().remove();
 
     const mensaje = document.createElement("p");
@@ -68,7 +78,7 @@ function iniciarJuego(){
     if(validacion === true){
         IU.botonJugar().disabled = false; 
         nombre = IU.nombreUsuario();
-        mensaje.textContent = `¡A luchar, héroe ${nombre}!`;
+        mensaje.textContent = `Adéntrate en la cueva, ${nombre}, Gollum te necesita.`;
     }
     else{
         IU.botonJugar().disabled = true;
@@ -79,8 +89,8 @@ function iniciarJuego(){
 
 }
 
-/* Función que oculta la pantalla de introducción de usuario y genera y muestra la
-pantalla de juego. Recoge el nombre de usuario e inicia el número de tiradas a 0 */
+/* Oculta la pantalla de introducción de usuario y muestra la pantalla de juego. 
+Recoge el nombre de usuario y reinicia el contador de tiradas */
 function pulsarJugar(){
     IU.pantallaLogin().style.display = "none";
     nombre = IU.nombreUsuario();
@@ -91,34 +101,36 @@ function pulsarJugar(){
 
 /*----- Finalización y reinicio -----*/
 
+/* Muestra el mensaje de victoria, registra la puntuación y permite iniciar una nueva partida. */
 function victoria(){
     IU.contenedorDado().style.display = "none";
 
     const mensaje = IU.mensajeJuego();
-    mensaje.textContent = `¡Enhorabuena ${nombre}, eres rico!\n`;
+    mensaje.innerHTML = `¡Lo conseguiste, ${nombre}, Gollum ha encontrado el Anillo!<br>`;
 
     let mapa = recuperarMapaLocal("recordTiradas");
     mapa.set(`${nombre}`, `${numeroTiradas}`);
 
-    guardarenLocal("recordTiradas", serializarMapa(mapa));
+    guardarEnLocal("recordTiradas", serializarMapa(mapa));
 
     const mensajeRecord = document.createElement("div");
     mensajeRecord.id = "mensajeRecord";
     mensaje.insertAdjacentElement('afterend', mensajeRecord);
     
-    mensaje.textContent += esRecord(nombre) ?  
-        `¡Tienes el record con ${numeroTiradas} tiradas!`:
-        `Has necesitado ${numeroTiradas} tiradas para encontrar el tesoro`;
+    mensaje.innerHTML += esRecord(nombre) ?  
+        `¡Nadie ha sido más rápido!<br>¡Sólo necesitaste ${numeroTiradas} tiradas!`:
+        `Has necesitado ${numeroTiradas} tiradas para mostrarle el camino.`;
     
     generarBotonNuevaPartida();
     
 }
-/* Función que devuelve los elementos necesarios a su estado inicial para una nueva partida */
+/* Reinicia la partida al estado inicial. */
 function nuevaPartida(){
     reiniciarEstado();
     IU.pantallaJuego().style.display = "none";
-    IU.pantallaLogin().style.display = "block";
-    IU.contenedorDado().style.display = "block";
+    IU.pantallaLogin().style.display = "flex";
+    IU.contenedorDado().style.display = "flex";
+    IU.dado().src = "./img/placeholderDado.png"
     IU.botonJugar().disabled = true;
     IU.formLogin().reset();
 
@@ -128,7 +140,7 @@ function nuevaPartida(){
     if(IU.mensajeLogin()) IU.mensajeLogin().remove();
 }
 
-/* Reinicio de los datos de juego */
+/* Restablece los datos del juego a sus valores iniciales. */
 function reiniciarEstado(){
     nombre = '';
     numeroTiradas = 0;
@@ -136,31 +148,35 @@ function reiniciarEstado(){
 
 /*----- Generación y gestión de la IU -----*/
 
-/* Función que muestra la pantalla de juego y genera los elementos necesarios */
+/* Función que muestra la pantalla de juego al usuario.
+   Genera los elementos necesarios para la partida: tablero, gráficos,
+   y configura el mensaje y el botón de tirar el dado. */
 function mostrarJuego(){
-    IU.pantallaJuego().style.display = "block";
+    IU.pantallaJuego().style.display = "flex";
     definirMensajeJuego();
     generarTablero();
     insertarGraficos();
     configurarBotonTirar();
 }
 
-/* Función que configura el mensaje mostrado durante la partida */
+/* Configura el mensaje principal mostrado durante la partida */
 function definirMensajeJuego(){
     const mensaje = IU.mensajeJuego();
-    mensaje.textContent = `Adelante ${nombre}, grandes riquezas te esperan...`;
+    mensaje.innerHTML = `Solo tú puedes guiar a Gollum, ${nombre}.<br>`
+        + `Tira el dado y muéstrale el camino.`;
 
 }
 
-/* Función que genera los elementos de juego (tablero, botones, elementos gráficos) */
+/* Genera el tablero de juego con un tamaño de 10x10 celdas.
+   Asigna un ID único a cada celda con el formato "x-y" para facilitar su manejo. */
 function generarTablero(){
     const tablero = crearTabla(10,10);
     tablero.id = "tablero";
     IU.contenedorTablero().appendChild(tablero);
 }
 
-/* Función que genera una tabla de x filas e y columnas, identificado
-cada celda con un string de formato "x-y" */
+/* Crea dinámicamente una tabla HTML con un tamaño de x filas por y columnas.
+   Cada celda recibe un ID único en el formato "x-y". */
 function crearTabla(x, y){
     let cadenaTabla = '';
     
@@ -177,30 +193,29 @@ function crearTabla(x, y){
     return tabla;
 }
 
-/* Función que crea los elementos gráficos del tablero de juego y los inserta
-en el documento */
+/* Inserta los gráficos principales en el tablero:
+   - El objetivo se coloca en la última celda (objetivo del juego).
+   - El héroe se coloca en la primera celda (posición inicial).
+   Actualiza las posiciones iniciales de ambos elementos en sus respectivas variables. */
 function insertarGraficos(){
-    /* Se crean los elementos gráficos del juego, o se seleccionan si ya existen, y se
-    declaran sus propiedades */
-
-    /* Se selecciona la última celda del tablero y se extraen sus coordenadas
-    para insertar el cofre en ella independientemente del tamaño del tablero */
+    // Identificar la última celda del tablero para colocar el objetivo.
     const ultimaCelda = IU.tablero().querySelector("tr:last-child td:last-child").id.split("-");
     
-    let cofre;
-    if(IU.cofre()) {
-        cofre = IU.cofre();
+    // Crear o seleccionar el elemento gráfico del objetivo.
+    let objetivo;
+    if(IU.objetivo()) {
+        objetivo = IU.objetivo();
     }  
     else {
-        cofre = document.createElement("img");
-        document.getElementById(`${ultimaCelda[0]}-${ultimaCelda[1]}`).appendChild(cofre);
+        objetivo = document.createElement("img");
+        document.getElementById(`${ultimaCelda[0]}-${ultimaCelda[1]}`).appendChild(objetivo);
     }
-    cofre.id = "cofre"
-    cofre.src = "./img/cofre.png";
-    posicionCofre[0] = parseInt(ultimaCelda[0]);
-    posicionCofre[1] = parseInt(ultimaCelda[1]);
+    objetivo.id = "objetivo"
+    objetivo.src = "./img/anillo.png";
+    posicionObjetivo[0] = parseInt(ultimaCelda[0]);
+    posicionObjetivo[1] = parseInt(ultimaCelda[1]);
 
-    /* Se inserta el héroe en la primera celda */
+    // Crear o seleccionar el elemento gráfico del héroe.
     let heroe;
     if(IU.heroe()) {
         heroe = IU.heroe();
@@ -210,19 +225,26 @@ function insertarGraficos(){
         document.getElementById("1-1").appendChild(heroe);
     }
     heroe.id = "heroe";
-    heroe.src = "./img/heroe.svg";
+    heroe.src = "./img/gollum.png";
     posicionHeroe[0] = 1;
     posicionHeroe[1] = 1;
 }
 
-/* Función que configura los elementos del botón de tirada de dado */
+/* Configura el botón de tirar el dado:
+   - Quita evento previo asociado al botón para prevenir errores.
+   - Añade un nuevo event listener que ejecuta la función tirarDado() al ser pulsado. */
 function configurarBotonTirar(){
     const boton = IU.botonTirar();
     boton.removeEventListener("click", tirarDado);
     boton.addEventListener("click", tirarDado);
 }
 
-/* Función que devuelve una sección contenedora de un botón generado a partir de los parámetros */
+/* Crea un contenedor que incluye un botón dinámico basado en los parámetros recibidos.
+   - contenedorID: ID único para el contenedor.
+   - botonID: ID único para el botón.
+   - texto: Texto mostrado en el botón.
+   - funcionDisparada: Función que se ejecuta al pulsar el botón.
+   Devuelve el contenedor con el botón incluido. */
 function generarBoton(contenedorID, botonID, texto, funcionDisparada){
     const contenedor = document.createElement("div");
     contenedor.id = contenedorID;
@@ -237,7 +259,8 @@ function generarBoton(contenedorID, botonID, texto, funcionDisparada){
     return contenedor;
 }
 
-/* Función que crea e inserta un botón que reinicia la partida */
+/* Genera un botón que permite iniciar una nueva partida al finalizar la actual.
+   El botón se inserta en el documento junto al contenedor de juego. */
 function generarBotonNuevaPartida(){
     const boton = generarBoton(
         "contenedorBotonNuevaPartida", 
@@ -249,49 +272,41 @@ function generarBotonNuevaPartida(){
 
 /*----- Lógica del juego -----*/
 
-/* Función que simula una tirada de dado de 6 generando un número aleatorio,
-selecciona la imagen asignada al dado, y modifica las celdas para las que la tirada
-permite el movimiento */
+/* Simula el lanzamiento de un dado.
+   - Genera un número aleatorio entre 1 y 6.
+   - Actualiza la imagen del dado en la interfaz.
+   - Desactiva temporalmente el botón de tirar.
+   - Resalta las celdas disponibles según el número obtenido. */
 function tirarDado(ev){
     numeroTiradas += 1;
     let tirada = parseInt(Math.random()*6 + 1);
-    const imagenDado = IU.dado();
-    imagenDado.src = `./img/dado${tirada}.png`;
+    IU.dado().src = `./img/dado${tirada}.png`;
     
     ev.currentTarget.disabled = true;
     resaltarCeldas(tirada);
 }
 
-/* Función que recoge el resultado de una tirada de dado, recoge la posición actual
-del personaje, y a partir de esos datos modifica las celdas apropiadas a la tirada
-asignádolas la clase "celdaResaltada" */
+/* Resalta las celdas disponibles para mover el héroe.
+   - Toma el resultado de la tirada y calcula las celdas accesibles en las
+     direcciones vertical y horizontal (izquierda, derecha, arriba, abajo).
+   - Aplica la clase "celdaResaltada" a las celdas dentro del rango permitido.
+   - Evita errores al verificar que las celdas existan antes de aplicar la clase. */
 function resaltarCeldas(tirada){
-    /* En cada eje, horizontal y vertical, se aplica la clase "celdaResaltada"
-    a cada elemento de la tabla desde la posición actual hasta posición +/- tirada 
-    Se controla que sólo se aplique a elementos que existen */   
-    for(let i = 1; i <= tirada; i++){
- 
-        const celdaDerecha = document.getElementById(`${posicionHeroe[0] + i}-${posicionHeroe[1]}`);
-        if(celdaDerecha)
-            celdaDerecha.className=("celdaResaltada");
+    const direcciones =[[-1, 0], [1, 0], [0, -1], [0, 1]];
 
-        const celdaIzquierda = document.getElementById(`${posicionHeroe[0]-i}-${posicionHeroe[1]}`);
-        if(celdaIzquierda)
-            celdaIzquierda.className=("celdaResaltada");
-
-        const celdaSuperior = document.getElementById(`${posicionHeroe[0]}-${posicionHeroe[1] + i}`);
-        if(celdaSuperior)
-            celdaSuperior.className=("celdaResaltada");
-
-        const celdaInferior = document.getElementById(`${posicionHeroe[0]}-${posicionHeroe[1]- i}`);
-        if(celdaInferior)
-            celdaInferior.className=("celdaResaltada");
-    }
+    direcciones.forEach(d => {
+        for(let i = 1; i <= tirada; i++){
+            const celda = IU.celda(posicionHeroe[0] + i*d[0], posicionHeroe[1] + i*d[1]);
+            if(celda) celda.className=("celdaResaltada");
+        }
+    })
 
     habilitarClick();
 }
 
-/* Función que añade un event listener de click a cada celda de clase "celdaResaltada" */
+/* Activa la funcionalidad de click en celdas resaltadas.
+   - Agrega un event listener de click a cada celda con la clase "celdaResaltada".
+   - Permite mover al héroe al hacer click en una celda válida. */
 function habilitarClick(){
     const celdas = document.getElementsByClassName("celdaResaltada");
      
@@ -301,18 +316,23 @@ function habilitarClick(){
     
 }
 
-/* Función de control de evento en habilitarClick() */
+/* Controlador para el evento de clic en celdas resaltadas.
+   - Mueve el héroe a la celda seleccionada. */
 function controlClick(ev){
     moverHeroe(ev.currentTarget);
 }
 
-function esVictoria(posicionHeroe, posicionCofre){
-    return posicionHeroe[0] == posicionCofre[0] && posicionHeroe[1] == posicionCofre[1];
+/* Verifica si el héroe ha alcanzado el objetivo.
+   - Devuelve true si las posiciones coinciden, de lo contrario, false. */
+function esVictoria(posicionHeroe, posicionObjetivo){
+    return posicionHeroe[0] == posicionObjetivo[0] && posicionHeroe[1] == posicionObjetivo[1];
 }
 
-/* Función que elimina el gráfico del personaje de su posición actual, lo coloca
-en la celda que ha sido pulsada, comprueba si se ha alcanzado el objetivo, en cuyo caso
-ejecuta la función victoria(), y ejecuta la función esperarTirada() */
+/* Mueve al héroe a la celda seleccionada.
+   - Elimina al héroe de su posición actual y lo agrega a la nueva celda.
+   - Actualiza las coordenadas del héroe.
+   - Verifica si se ha alcanzado el objetivo (objetivo) y ejecuta la función de victoria.
+   - Prepara el tablero para la próxima tirada. */
 function moverHeroe(celda){
     const heroe = IU.heroe();
     heroe.remove();
@@ -322,13 +342,14 @@ function moverHeroe(celda){
     posicionHeroe[0] = parseInt(posActual[0]);
     posicionHeroe[1] = parseInt(posActual[1]);
 
-    if((esVictoria(posicionHeroe, posicionCofre))) victoria();
+    if((esVictoria(posicionHeroe, posicionObjetivo))) victoria();
     
     esperarTirada();
 }
 
-/* Función que reinicia el tablero a la espera de una tirada ejecutando
-la función reiniciarCelda() para cada celda resaltada */
+/* Prepara el tablero para la próxima tirada.
+   - Limpia las celdas resaltadas eliminando su clase y event listeners.
+   - Reactiva el botón de tirar. */
 function esperarTirada(){
     const celdas = Array.from(document.getElementsByClassName("celdaResaltada"));
     celdas.forEach(celda => reiniciarCelda(celda));
@@ -336,8 +357,9 @@ function esperarTirada(){
     
 }
 
-/* Función que reinicia una celda eliminando su clase "celdaResaltada" y
-el event listener de click en el mapa */
+/* Reinicia una celda resaltada.
+   - Elimina la clase "celdaResaltada".
+   - Quita el event listener de clic. */
 function reiniciarCelda(celda){
     celda.removeEventListener("click", controlClick);
     celda.classList.remove("celdaResaltada");
@@ -346,8 +368,9 @@ function reiniciarCelda(celda){
 
 /*----- Almacenamiento y puntuaciones -----*/
 
-/* Función que genera una cadena de caracteres a partir de un mapa con formato
-'clave=valor;' */
+/* Serializa un mapa en una cadena de texto con formato 'clave=valor;'.
+   - Convierte las entradas del mapa en pares clave-valor separados por '='.
+   - Une los pares con ';' para formar la cadena final. */
 function serializarMapa(mapa){
 
     let itrMapa = mapa.entries();
@@ -370,8 +393,8 @@ function serializarMapa(mapa){
     return cadena;
 }
 
-/* Función que genera un mapa a partir del valor de una entrada tipo cadena de caracteres
-en formato 'clave=valor;' */
+/* Deserializa una cadena en formato 'clave=valor;' en un mapa.
+   - Divide la cadena en pares clave-valor y los almacena en un mapa. */
 function deserializarMapa(entrada){
     let mapa = new Map();   
     entrada = entrada.split(";");
@@ -384,8 +407,8 @@ function deserializarMapa(entrada){
     return mapa;
 }
 
-/* Función que recoge un mapa guardado en el almacenamiento local con clave "entrada", o devuelve
-un mapa vacío si la clave no existe o está vacía */
+/* Recupera un mapa almacenado localmente.
+   - Devuelve un mapa vacío si no existe una entrada válida con la clave proporcionada. */
 function recuperarMapaLocal(clave){
 
     let mapa = new Map();
@@ -397,8 +420,9 @@ function recuperarMapaLocal(clave){
     return mapa;
 }
 
-/* Función que guarda una entrada en el almacenamiento local si es accesible */
-function guardarenLocal(clave, valor){
+/* Guarda un valor en el almacenamiento local.
+   - Maneja errores si el almacenamiento local no está accesible. */
+function guardarEnLocal(clave, valor){
     try{
         localStorage.setItem(`${clave}`, `${valor}`);
     }
@@ -408,8 +432,9 @@ function guardarenLocal(clave, valor){
     
 }
 
-/* Función que compara la entrada con el valor mínimo de todas las puntuaciones almacenadas
-localmente, devuelve true si la entrada es igual al valor mínimo, flase si no */
+/* Comprueba si un usuario tiene un récord.
+   - Compara el valor mínimo entre todas las puntuaciones almacenadas.
+   - Devuelve true si la puntuación del usuario es igual o menor al récord. */
 function esRecord(usuario){
     let mapaRecords = recuperarMapaLocal("recordTiradas");
     const record = Math.min(...Array.from(mapaRecords.values()));
@@ -424,5 +449,3 @@ function esRecord(usuario){
     else return true;
 
 }
-
-
