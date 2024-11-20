@@ -1,0 +1,41 @@
+Informe de Desarrollo: Juego Interactivo "Mi Tesoro"
+
+Decisiones de Diseño
+ - Modularidad en el Código
+	Se optó por un diseño modular para facilitar el mantenimiento y la escalabilidad. Todas las funciones relacionadas con la manipulación del DOM están	centralizadas en el objeto IU, lo que reduce la repetición de código y facilita los cambios en la interfaz.
+
+- Validación del Usuario
+	Se implementó un sistema de validación para garantizar que el nombre de usuario sea apropiado, evitando entradas vacías o con números. Esto mejora la 	experiencia del usuario desde el principio.
+
+- Interfaz Dinámica
+
+	El tablero de 10x10 se genera dinámicamente usando la función crearTabla. Esto permite modificar fácilmente el tamaño del tablero sin cambiar el 	diseño del HTML.
+	Los gráficos del héroe y del objetivo se colocan automáticamente en posiciones predeterminadas, asegurando consistencia en la experiencia de juego.
+
+- Lógica de Juego
+	La mecánica del juego utiliza un dado virtual y un sistema de celdas resaltadas para guiar al jugador, lo que añade elementos visuales y de 	interacción.
+	Se añadió un sistema de registro de puntuaciones con almacenamiento local (localStorage), promoviendo la rejugabilidad al permitir a los usuarios 	comparar sus resultados.
+
+- Interacción y Flujo de Usuario
+
+	El flujo del juego está diseñado para ser intuitivo: desde el inicio del juego (pantalla de login), pasando por las tiradas del dado, hasta la 	detección de victoria y el reinicio del juego.
+	Se proporciona retroalimentación constante al usuario mediante mensajes en pantalla y cambios visuales en las celdas disponibles.
+
+
+Desafíos Encontrados
+- Gestión de Eventos en el DOM
+	Durante el desarrollo, surgieron problemas relacionados con la duplicación de eventos al mover el héroe entre celdas. Esto se solucionó limpiando los 	eventos anteriores con removeEventListener.
+
+- Resaltado de Celdas Disponibles
+	Calcular y resaltar dinámicamente las celdas accesibles tras una tirada del dado presentó un reto, especialmente en los bordes del tablero. Se añadió 	lógica para verificar que las celdas calculadas existieran antes de aplicarles estilos.
+
+- Compatibilidad del Almacenamiento Local
+	En algunos navegadores, el acceso a localStorage puede estar deshabilitado o restringido. Esto se manejó con un bloque try-catch para evitar errores 	fatales.
+
+- Diseño Adaptable de la Interfaz
+	El diseño original requería ajustar elementos como el tablero y los gráficos para pantallas de diferentes tamaños. Se decidió utilizar una estructura 	HTML flexible complementada por CSS para mejorar la experiencia en dispositivos móviles y de escritorio.
+
+Aprendizajes y Mejoras Futuras
+- La modularidad del diseño facilitó la implementación de nuevas funcionalidades, como el botón de reinicio. Este enfoque será clave en futuros proyectos.
+- Se podría mejorar la accesibilidad del juego mediante la adición de soporte para teclado y lectores de pantalla.
+- Una posible mejora sería permitir al usuario personalizar el tamaño del tablero o la apariencia de los gráficos.

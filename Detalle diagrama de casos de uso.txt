@@ -1,0 +1,83 @@
+Esquema de Casos de Uso del Juego
+
+1. Pantalla de Login
+
+Caso de Uso: Ingresar nombre de usuario
+- Actor: Jugador
+Descripción: El jugador ingresa su nombre en un formulario para iniciar sesión en el juego.
+Flujo:
+	El jugador ingresa un nombre.
+	El sistema valida el nombre (no vacío, mínimo 4 caracteres, sin números).
+	Si el nombre es válido, habilita el botón "Jugar".
+	Si el nombre es inválido, muestra un mensaje de error.
+	El jugador puede corregir el nombre y volver a intentarlo.
+	
+Caso de Uso: Validar nombre y habilitar juego
+- Actor: Sistema
+Descripción: El sistema valida el nombre ingresado y muestra un mensaje de bienvenida si es válido, o muestra un error si no lo es.
+Flujo:
+	El sistema valida el nombre de usuario ingresado.
+	Si el nombre es válido, muestra un mensaje de bienvenida.
+	Si el nombre es inválido, muestra un mensaje de error y deshabilita el botón "Jugar".
+
+
+2. Pantalla de Juego
+
+- Caso de Uso: Iniciar juego
+
+Actor: Jugador
+Descripción: El jugador comienza el juego al presionar el botón "Jugar" después de ingresar un nombre válido.
+Flujo:
+	El jugador presiona el botón "Jugar".
+	El sistema oculta la pantalla de login y muestra la pantalla de juego.
+	Se reinician las variables de juego (número de tiradas, posiciones, etc.).
+	El sistema configura el tablero de juego y muestra el mensaje inicial.
+
+- Caso de Uso: Tirar el dado
+Actor: Jugador
+Descripción: El jugador tira el dado para determinar cuántas celdas puede mover al héroe.
+Flujo:
+	El jugador presiona el botón "Tirar".
+	El sistema genera un número aleatorio entre 1 y 6.
+	El dado se muestra con la imagen correspondiente al número obtenido.
+	El sistema resalta las celdas disponibles en el tablero según la tirada.
+	El jugador puede hacer clic en las celdas resaltadas para mover al héroe.
+	Después de cada tirada, el sistema desactiva el botón "Tirar" hasta que el jugador mueva al héroe.
+
+Caso de Uso: Mover el héroe
+- Actor: Jugador
+Descripción: El jugador selecciona una celda resaltada para mover al héroe.
+Flujo:
+	El jugador hace clic en una celda resaltada.
+	El sistema mueve al héroe a esa celda.
+	El sistema actualiza la posición del héroe.
+	El sistema verifica si el héroe ha alcanzado el objetivo.
+	Si el héroe llega al objetivo, el sistema muestra un mensaje de victoria y registra la puntuación.
+	Si no se ha alcanzado el objetivo, se espera una nueva tirada.
+
+Caso de Uso: Verificar victoria
+- Actor: Sistema
+Descripción: El sistema verifica si el héroe ha llegado a la celda objetivo.
+Flujo:
+	El sistema comprueba si la posición del héroe coincide con la del objetivo.
+	Si el héroe ha llegado al objetivo, se muestra un mensaje de victoria y se detiene el juego.
+	Si el héroe no ha llegado al objetivo, el juego continúa.
+
+Caso de Uso: Reiniciar juego (Nueva partida)
+- Actor: Jugador
+Descripción: El jugador inicia una nueva partida después de haber ganado o al finalizar el juego.
+Flujo:
+	El jugador presiona el botón "Jugar de nuevo".
+	El sistema reinicia el estado del juego (nombre, número de tiradas, posiciones del héroe y objetivo).
+	El sistema restablece la pantalla de login y el formulario.
+	El jugador puede ingresar un nuevo nombre y comenzar de nuevo.
+
+3. Almacenamiento de Puntuaciones
+
+Caso de Uso: Guardar puntuación
+Actor: Sistema
+Descripción: El sistema guarda la puntuación del jugador si alcanza un récord.
+Flujo:
+	Cuando el jugador gana, el sistema verifica si su número de tiradas es un récord.
+	Si el jugador ha batido el récord, la puntuación se guarda en el almacenamiento local.
+	El sistema muestra un mensaje indicando si el jugador ha logrado un nuevo récord.
