@@ -18,7 +18,7 @@ function inicio(){
     IU.botonJugar().addEventListener("click", pulsarJugar);
 }
 
-/* OObjeto para acceder dinámicamente a elementos del DOM.
+/* Objeto para acceder dinámicamente a elementos del DOM.
    Centraliza todas las referencias al DOM, facilitando su mantenimiento. */
 const IU = {
 
@@ -443,8 +443,7 @@ function esRecord(usuario){
         if(mapaRecords.get(`${usuario}`) <= record){
             return true;
         }
-        else
-            return false;
+        return false;
     }
     else return true;
 
