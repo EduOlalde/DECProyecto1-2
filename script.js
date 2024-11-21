@@ -1,3 +1,4 @@
+'use strict';
 /*----- Inicialización y configuración -----*/
 
 document.addEventListener("DOMContentLoaded", inicio);
@@ -388,7 +389,7 @@ function serializarMapa(mapa){
         aPar2.push(aPar[i].join("="));
     }
 
-    cadena = aPar2.join(";");
+    let cadena = aPar2.join(";");
 
     return cadena;
 }
