@@ -54,3 +54,8 @@ Funciones clave del código
 ## Almacenamiento y puntuaciones
 
 El juego guarda las mejores puntuaciones utilizando el almacenamiento local (localStorage). La puntuación se basa en el número de tiradas necesarias para alcanzar el objetivo, y se compara con las puntuaciones anteriores para determinar si el jugador ha establecido un nuevo récord.
+
+
+## Creado por
+Eduardo Olalde Cruz
+Estudiante de Desarrollo de Aplicaciones Web
