@@ -1,7 +1,6 @@
 body {
     font-family: Arial, sans-serif;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -9,29 +8,62 @@ body {
     background-color: #f0f0f0;
 }
 
-#pantallaLogin {
+#pantallaLogin, #pantallaJuego {
     display: flex;
     flex-direction: column;
-    text-align: center;
+    align-items: center;
     padding: 20px;
-    background-color: #ffffff;
+    background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#pantallaLogin {
+    text-align: center;
     width: 300px;
 }
 
 #pantallaJuego {
-    display: none; 
-    flex-direction: column;
-    align-items: center;
-    gap: 20px; 
+    display: none;
+    gap: 20px;
+    max-width: 800px;
     width: 100%;
-    max-width: 800px; 
     margin: 20px auto;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#contenedorJuego {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+    gap: 20px;
+    width: 100%;
+}
+
+#tablero {
+    background: url("./img/cueva.png") center/cover no-repeat;
+    border-collapse: collapse;
+    width: 500px;
+    height: 500px;
+}
+
+#tablero td {
+    width: auto;
+    height: auto;
+    aspect-ratio: 1;
+    border: 1px solid #444;
+    text-align: center;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+#tablero td img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 input[type="text"], button {
@@ -49,15 +81,11 @@ button {
     background-color: #2196F3;
 }
 
-#botonValidar{
+#botonValidar, #botonTirar, #botonRanking {
     background-color: #4CAF50;
 }
-
-#botonTirar {
-    background-color: #4CAF50;
-    padding: 10px 20px;
-    width: 100%;
-    margin-top: 10px;
+#botonRanking {
+    margin-left: 10px;
 }
 
 button:disabled {
@@ -66,67 +94,23 @@ button:disabled {
     cursor: not-allowed;
 }
 
-#mapa {
+#mapa, #contenedorDado {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-}
-
-#contenedorJuego {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; 
-    gap: 20px; 
-    width: 100%;
-}
-
-#tablero {
-    background-image: url("./img/cueva.png");
-    background-size: cover;
-    background-position: center;
-    border-collapse: collapse;
-    width: 500px;
-    height: 500px;
-}
-
-#tablero td {
-    width: 50px;
-    height: 50px;
-    border: 1px solid #444;
-    text-align: center;
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-    position: relative;
-}
-
-#tablero td img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
 }
 
 #contenedorDado {
-    display: flex;
-    flex-direction: column;
-    align-self: center;
-    align-items: center;
-    width: 120px; 
+    flex-direction: row;
     gap: 10px;
+    width: 120px;
 }
 
 #contenedorDado img {
-    width: 100px;  
+    width: 100px;
     height: 100px;
-    object-fit: cover; 
-}
-
-#botonTirar {
-    padding: 10px 20px;
-    width: 100%;
+    object-fit: cover;
 }
 
 #contenedorMensaje {
@@ -134,14 +118,30 @@ button:disabled {
     padding: 20px;
     text-align: center;
     border-radius: 8px;
-    height: auto;
+}
+
+#contenedorFinJuego {
+    display: none;
 }
 
 #tablero .celdaResaltada {
-    background: linear-gradient(
-        135deg,               
-        rgba(255, 0, 0, 0.3) 50%, 
-        transparent 70%        
-    );
-    z-index: 1;       
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.3) 50%, transparent 70%);
+    z-index: 1;
 }
+
+#ranking {
+    width: 100%;
+    max-width: 400px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+#ranking th, #ranking td {
+    padding: 10px;
+  border: 1px solid #ddd;
+}
+
+#ranking th {
+    font-weight: bold;
+    background-color: #f2f2f2;
+  }

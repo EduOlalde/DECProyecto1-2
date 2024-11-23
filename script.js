@@ -15,8 +15,15 @@ const posicionObjetivo = [];
 
 /* Configuración de los botones tras la carga inicial del documento */
 function inicio(){
+    configurarBotones();
+}
+
+function configurarBotones(){
     IU.botonValidar().addEventListener("click", iniciarJuego);
     IU.botonJugar().addEventListener("click", pulsarJugar);
+    IU.botonTirar().addEventListener("click", tirarDado);
+    IU.botonNuevaPartida().addEventListener("click", nuevaPartida);
+    IU.botonRanking().addEventListener("click", mostrarRanking);
 }
 
 /* Objeto para acceder dinámicamente a elementos del DOM.
@@ -28,22 +35,27 @@ const IU = {
     pantallaJuego: () => document.getElementById("pantallaJuego"),
 
     // Formulario de login
+    formLogin: () => document.getElementById("formLogin"),
     botonJugar: () => document.getElementById("botonJugar"),
     botonValidar: () => document.getElementById("botonValidar"),
     nombreUsuario: () => document.getElementById("nombreUsuario").value,
     mensajeLogin: () => document.getElementById("mensajeLogin"),
 
     // Elementos del juego
-    formLogin: () => document.getElementById("formLogin"),
+    contenedorMensaje: () => document.getElementById("contenedorMensaje"),
     contenedorTablero: () => document.getElementById("contenedorTablero"),
     tablero: () => document.getElementById("tablero"),
-    celda: (x,y) => document.getElementById(`${x}-${y}`),
     contenedorDado: () => document.getElementById("contenedorDado"),
     dado: () => document.getElementById("dado"),
     botonTirar: () => document.getElementById("botonTirar"),
+    botonNuevaPartida: () => document.getElementById("botonNuevaPartida"),
+    botonRanking: () => document.getElementById("botonRanking"),
     mensajeJuego: () => document.getElementById("mensajeJuego"),
     contenedorJuego: () => document.getElementById("contenedorJuego"),
-    contenedorBotonNuevaPartida: () => document.getElementById("contenedorBotonNuevaPartida"),
+    contenedorFinJuego: () => document.getElementById("contenedorFinJuego"),
+    ranking: () => document.getElementById("ranking"),
+    celda: (tabla, x,y) => tabla.querySelector(`[id='${x}-${y}']`),
+    
 
     // Gráficos
     heroe: () => document.getElementById("heroe"),
@@ -96,23 +108,28 @@ function pulsarJugar(){
     IU.pantallaLogin().style.display = "none";
     nombre = IU.nombreUsuario();
     numeroTiradas = 0;
-
     mostrarJuego();
 }
 
 /*----- Finalización y reinicio -----*/
+/* Comprueba si el jugador ha mejorado su puntuación o es nuevo.
+En ese caso guarda las puntuaciones */
+function guardarPuntuacion(){
+    let ranking = recuperarMapaLocal("recordTiradas");
 
-/* Muestra el mensaje de victoria, registra la puntuación y permite iniciar una nueva partida. */
+    if(!ranking.get(nombre) || (ranking.get(nombre) >= numeroTiradas)) {
+        ranking.set(`${nombre}`, `${numeroTiradas}`);
+        guardarEnLocal("recordTiradas", serializarMapa(ranking));
+    }
+}
+
+/* Muestra el mensaje de victoria y los botones de fin de juego y registra la puntuación. */
 function victoria(){
+    guardarPuntuacion();
     IU.contenedorDado().style.display = "none";
 
     const mensaje = IU.mensajeJuego();
     mensaje.innerHTML = `¡Lo conseguiste, ${nombre}, Gollum ha encontrado el Anillo!<br>`;
-
-    let mapa = recuperarMapaLocal("recordTiradas");
-    mapa.set(`${nombre}`, `${numeroTiradas}`);
-
-    guardarEnLocal("recordTiradas", serializarMapa(mapa));
 
     const mensajeRecord = document.createElement("div");
     mensajeRecord.id = "mensajeRecord";
@@ -122,29 +139,37 @@ function victoria(){
         `¡Nadie ha sido más rápido!<br>¡Sólo necesitaste ${numeroTiradas} tiradas!`:
         `Has necesitado ${numeroTiradas} tiradas para mostrarle el camino.`;
     
-    generarBotonNuevaPartida();
-    
+    IU.contenedorFinJuego().style.display = "flex";
 }
-/* Reinicia la partida al estado inicial. */
-function nuevaPartida(){
-    reiniciarEstado();
+
+function reiniciarInterfaz(){
     IU.pantallaJuego().style.display = "none";
     IU.pantallaLogin().style.display = "flex";
     IU.contenedorDado().style.display = "flex";
-    IU.dado().src = "./img/placeholderDado.png"
+    IU.contenedorJuego().style.display = "flex";
+    IU.contenedorFinJuego().style.display = "none";
+    IU.botonRanking().style.display = "block";
+    IU.dado().src = "./img/placeholderDado.png";
     IU.botonJugar().disabled = true;
-    IU.formLogin().reset();
-
-    // Eliminación de elentos si existen
-    if(IU.tablero) IU.tablero().remove();
-    if(IU.contenedorBotonNuevaPartida()) IU.contenedorBotonNuevaPartida().remove();
-    if(IU.mensajeLogin()) IU.mensajeLogin().remove();
 }
 
 /* Restablece los datos del juego a sus valores iniciales. */
 function reiniciarEstado(){
     nombre = '';
     numeroTiradas = 0;
+}
+
+function limpiarElementosDinamicos(){
+    IU.formLogin().reset();
+    if (IU.mensajeLogin()) IU.mensajeLogin().remove();
+    if (IU.ranking()) IU.ranking().remove();
+}
+
+/* Reinicia la partida al estado inicial. */
+function nuevaPartida(){
+    reiniciarEstado();
+    reiniciarInterfaz();
+    limpiarElementosDinamicos();
 }
 
 /*----- Generación y gestión de la IU -----*/
@@ -155,9 +180,8 @@ function reiniciarEstado(){
 function mostrarJuego(){
     IU.pantallaJuego().style.display = "flex";
     definirMensajeJuego();
-    generarTablero();
+    generarTablero(10, 10);
     insertarGraficos();
-    configurarBotonTirar();
 }
 
 /* Configura el mensaje principal mostrado durante la partida */
@@ -168,11 +192,14 @@ function definirMensajeJuego(){
 
 }
 
-/* Genera el tablero de juego con un tamaño de 10x10 celdas.
-   Asigna un ID único a cada celda con el formato "x-y" para facilitar su manejo. */
-function generarTablero(){
-    const tablero = crearTabla(10,10);
+/* Genera el tablero de juego con un tamaño de x filas y y columnas.
+   Asigna un ID único a cada celda con el formato "-x-y" para facilitar su manejo. 
+   Elimina el tablero anterior si existe */
+function generarTablero(x, y){
+    if(IU.tablero()) IU.tablero().remove();
+    const tablero = crearTabla(x,y);
     tablero.id = "tablero";
+    tablero.addEventListener("click", controlClickMover);
     IU.contenedorTablero().appendChild(tablero);
 }
 
@@ -184,7 +211,7 @@ function crearTabla(x, y){
     for(let i=1; i <= x; i++){
         cadenaTabla += '<tr>';
         for(let j=1; j <= y; j++){
-            cadenaTabla += `<td id="${i}-${j}"></td>`;
+            cadenaTabla += `<td id="${j}-${i}"></td>`;
         }
         cadenaTabla += '</tr>'
     }
@@ -209,7 +236,8 @@ function insertarGraficos(){
     }  
     else {
         objetivo = document.createElement("img");
-        document.getElementById(`${ultimaCelda[0]}-${ultimaCelda[1]}`).appendChild(objetivo);
+        let celda = IU.celda(IU.tablero(), ultimaCelda[0], ultimaCelda[1]);
+        celda.appendChild(objetivo);
     }
     objetivo.id = "objetivo"
     objetivo.src = "./img/anillo.png";
@@ -223,7 +251,8 @@ function insertarGraficos(){
     }
     else {
         heroe = document.createElement("img");
-        document.getElementById("1-1").appendChild(heroe);
+        let celda = IU.celda(IU.tablero(), 1, 1);
+        celda.appendChild(heroe);
     }
     heroe.id = "heroe";
     heroe.src = "./img/gollum.png";
@@ -231,24 +260,18 @@ function insertarGraficos(){
     posicionHeroe[1] = 1;
 }
 
-/* Configura el botón de tirar el dado:
-   - Quita evento previo asociado al botón para prevenir errores.
-   - Añade un nuevo event listener que ejecuta la función tirarDado() al ser pulsado. */
-function configurarBotonTirar(){
-    const boton = IU.botonTirar();
-    boton.removeEventListener("click", tirarDado);
-    boton.addEventListener("click", tirarDado);
-}
-
 /* Crea un contenedor que incluye un botón dinámico basado en los parámetros recibidos.
-   - contenedorID: ID único para el contenedor.
+   - contenedorID: ID para el contenedor.
    - botonID: ID único para el botón.
    - texto: Texto mostrado en el botón.
    - funcionDisparada: Función que se ejecuta al pulsar el botón.
    Devuelve el contenedor con el botón incluido. */
 function generarBoton(contenedorID, botonID, texto, funcionDisparada){
-    const contenedor = document.createElement("div");
-    contenedor.id = contenedorID;
+    let contenedor = document.getElementById(contenedorID);
+    if(!contenedor) {
+        contenedor = document.createElement("div");
+        contenedor.id = contenedorID;
+    }
 
     const boton = document.createElement("button");
     boton.id = botonID;
@@ -258,17 +281,6 @@ function generarBoton(contenedorID, botonID, texto, funcionDisparada){
     contenedor.appendChild(boton);
 
     return contenedor;
-}
-
-/* Genera un botón que permite iniciar una nueva partida al finalizar la actual.
-   El botón se inserta en el documento junto al contenedor de juego. */
-function generarBotonNuevaPartida(){
-    const boton = generarBoton(
-        "contenedorBotonNuevaPartida", 
-        "botonNuevaPartida", 
-        "Jugar de nuevo", 
-        nuevaPartida);
-    IU.contenedorJuego().insertAdjacentElement('afterend', boton);
 }
 
 /*----- Lógica del juego -----*/
@@ -297,30 +309,19 @@ function resaltarCeldas(tirada){
 
     direcciones.forEach(d => {
         for(let i = 1; i <= tirada; i++){
-            const celda = IU.celda(posicionHeroe[0] + i*d[0], posicionHeroe[1] + i*d[1]);
+            const celda = IU.celda(IU.tablero(), posicionHeroe[0] + i*d[0], posicionHeroe[1] + i*d[1]);
             if(celda) celda.className=("celdaResaltada");
         }
     })
-
-    habilitarClick();
 }
 
-/* Activa la funcionalidad de click en celdas resaltadas.
-   - Agrega un event listener de click a cada celda con la clase "celdaResaltada".
-   - Permite mover al héroe al hacer click en una celda válida. */
-function habilitarClick(){
-    const celdas = document.getElementsByClassName("celdaResaltada");
-     
-    for (let celda of celdas){
-        celda.addEventListener("click", controlClick);
-    }
-    
-}
-
-/* Controlador para el evento de clic en celdas resaltadas.
-   - Mueve el héroe a la celda seleccionada. */
-function controlClick(ev){
-    moverHeroe(ev.currentTarget);
+/* Controlador para el evento de clic en el tablero.
+   - Selecciona la celda más cercana al evento
+   - Mueve el héroe a la celda seleccionada si es celdaResaltada. 
+   - Se comprueba que celda no sea null para evitar errores */
+function controlClickMover(ev){
+        let celda = ev.target.closest("td");
+        if(celda && celda.classList.contains("celdaResaltada")) moverHeroe(celda);
 }
 
 /* Verifica si el héroe ha alcanzado el objetivo.
@@ -349,7 +350,7 @@ function moverHeroe(celda){
 }
 
 /* Prepara el tablero para la próxima tirada.
-   - Limpia las celdas resaltadas eliminando su clase y event listeners.
+   - Limpia las celdas resaltadas eliminando su clase.
    - Reactiva el botón de tirar. */
 function esperarTirada(){
     const celdas = Array.from(document.getElementsByClassName("celdaResaltada"));
@@ -359,12 +360,9 @@ function esperarTirada(){
 }
 
 /* Reinicia una celda resaltada.
-   - Elimina la clase "celdaResaltada".
-   - Quita el event listener de clic. */
+   - Elimina la clase "celdaResaltada". */
 function reiniciarCelda(celda){
-    celda.removeEventListener("click", controlClick);
-    celda.classList.remove("celdaResaltada");
-    
+    celda.classList.remove("celdaResaltada");   
 }
 
 /*----- Almacenamiento y puntuaciones -----*/
@@ -447,5 +445,28 @@ function esRecord(usuario){
         return false;
     }
     else return true;
+}
 
+/* Muestra una tabla de puntuaciones
+    - Esconde el tablero de juego
+    - Forma un array a partir de las claves almacenadas en el recordTiradas
+    - Genera una tabla con filas = número de jugadores + 1 y 2 columnas
+    - Rellena la tabla con las puntuaciones */
+function mostrarRanking(){
+    IU.contenedorJuego().style.display = "none";
+    IU.botonRanking().style.display = "none";
+    const ranking = recuperarMapaLocal("recordTiradas");
+    
+    let jugadores = Array.from(ranking.keys());
+    
+    let tabla = crearTabla(jugadores.length + 1 , 2);
+    tabla.id = "ranking";
+    IU.contenedorMensaje().insertAdjacentElement('afterend', tabla);
+    IU.celda(tabla, 1, 1).innerHTML = `Jugador`;
+    IU.celda(tabla, 2, 1).innerHTML = `Tiradas`;
+
+    for(let i = 0; i < jugadores.length; i++){
+        IU.celda(tabla, 1, i+2).innerHTML = jugadores[i];
+        IU.celda(tabla, 2, i+2).innerHTML = ranking.get(jugadores[i]);
+    }
 }

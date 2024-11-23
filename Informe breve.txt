@@ -1,28 +1,18 @@
 Informe de decisiones de desarrollo y desafíos encontrados
 
-Decisiones de Diseño
- - Modularidad en el Código
+Decisiones de diseño
+ - Modularidad en el código
 	Se optó por un diseño modular para facilitar el mantenimiento y la escalabilidad. Todas las funciones
 	relacionadas con la manipulación del DOM están centralizadas en el objeto IU, lo que reduce la repetición
 	de código y facilita los cambios en la interfaz.
 
-- Validación del Usuario
-	Se implementó un sistema de validación para garantizar que el nombre de usuario sea apropiado, evitando
-	entradas vacías o con números. 
-
-- Interfaz Dinámica
+- Interfaz dinámica
 	El tablero de 10x10 se genera dinámicamente usando la función crearTabla. Esto permite modificar fácilmente
 	el tamaño del tablero sin cambiar el diseño del HTML.
 	Los gráficos del héroe y del objetivo se colocan automáticamente en posiciones predeterminadas, asegurando
 	consistencia en la experiencia de juego.
 
-- Lógica de Juego
-	La mecánica del juego utiliza un dado virtual y un sistema de celdas resaltadas para guiar al jugador, lo
-	que añade elementos visuales y de interacción.
-	Se añadió un sistema de registro de puntuaciones con almacenamiento local (localStorage), promoviendo la
-	rejugabilidad al permitir a los usuarios comparar sus resultados.
-
-- Interacción y Flujo de Usuario
+- Interacción y flujo de usuario
 	El flujo del juego está diseñado para ser intuitivo: desde el inicio del juego (pantalla de login), pasando
 	por las tiradas del dado, hasta la detección de victoria y el reinicio del juego.
 	Se proporciona retroalimentación constante al usuario mediante mensajes en pantalla y cambios visuales en
@@ -30,30 +20,40 @@ Decisiones de Diseño
 
 
 Desafíos Encontrados
-- Gestión de Elementos Devueltos por getElementsByClassName():
+- Gestión de elementos devueltos por getElementsByClassName():
 	Desafío: El método getElementsByClassName() devuelve una colección de elementos en vivo, lo que significa
-	que si se modifica el DOM, la colección también se actualiza. Esto puede ser problemático cuando se necesita
-	realizar una manipulación de estos elementos de manera controlada.
+	que si se modifica el DOM, la colección también se actualiza. Esto es problemático cuando la manipulación
+	de los elementos de la colección hace que dichos elementos sean eliminados de la colección.
 
 	Solución: Para solucionar este problema, se creó un array a partir de los elementos devueltos por
 	getElementsByClassName(). De esta manera, se obtuvo una copia estática de los elementos en ese momento,
 	evitando modificaciones no deseadas mientras se procesaban los elementos del DOM. Esta solución facilitó la
 	manipulación de los elementos sin preocuparse por cambios dinámicos en la colección durante la ejecución del juego.
 
-- Gestión de Eventos en el DOM
-	Durante el desarrollo, surgieron problemas relacionados con la duplicación de eventos al mover el héroe entre celdas.
-	Esto se solucionó limpiando los eventos anteriores con removeEventListener.
+- Gestión de eventos en el DOM
+	La gestión del movimiento sobre el tablero llevó a idear distintos métodos para permitir el movimiento sólo sobre
+	las celdas adecuadas. El método original era ineficiente, añadiendo y eliminando escuchadores de eventos
+	constantemente a lo largo de la ejecución. Comprender el funcionamiento de la gestión de eventos y descubrir
+	ciertos métodos propios de JavaScript llevó a refactorizar la funcionalidad con un método mucho más simple
+	y eficiente.
 
-- Resaltado de Celdas Disponibles
-	El desafío al desarrollar resaltarCeldas() fue la optimización del algoritmo que itera sobre las celdas. El algoritmo
-	inicial era ineficiente, iterando separadamente sobre cada una de las cuatro direcciones. Se ideó un array donde cada 
-	elemento permite modificar la instrucción de iteración automáticamente para seleccionar las celdas necesarias,
-	descartando las celdas no existentes con facilidad.
+- Resaltado de celdas disponibles
+	El desafío al desarrollar resaltarCeldas() fue la optimización del algoritmo que itera sobre las celdas. El algoritmo 
+	inicial usaba diferentes instrucciones para iterar sobre cada una de las cuatro direcciones. Se ideó un array donde 
+	cada elemento permite modificar una única instrucción que permite seleccionar todas las celdas necesarias, 
+	consiguiendo un código más eficiente y legible.
+
+- Selección de distintos elementos con un mismo ID y funcionamiento de querySelector()
+	Utilizar una función que automatiza la creación de tablas supuso tener más de una tabla cuyas celdas estaban
+	identificadas con un mismo ID. Para seleccionar una celda deseada, se usó la función tabla.querySelector().
+	Esto produjo otro problema, ya que el ID de las tablas tiene el formato x-y, siendo x e y números, pero
+	querySelector() no permite selectores que comiencen por dígitos. La solución, para no modificar el ID de las
+	celdas, lo que complicaría otras instrucciones del programa, fue usar un formato específico de selector con 
+	esta forma: querySelector("[id='IDCelda']"
 
 
-Aprendizajes y Mejoras Futuras
-- La modularidad del diseño facilitó la implementación de nuevas funcionalidades, como el botón de reinicio. Este enfoque
-	será clave en futuros proyectos.
-- Se podría mejorar la accesibilidad del juego mediante la adición de soporte para teclado y lectores de pantalla.
+Posibles mejoras
 - Una posible mejora sería permitir al usuario personalizar el tamaño del tablero. Sería una mejora de fácil implementación
 	debido al diseño modular del código.
+- Otra posible mejora sería crear una función dedicada a la creación de elementos, que pueda centralizar esa función para
+	facilitarla en otras funciones (crearElemento(tipo, mapAtributos = {clave, valor}, contenidoHTML).
