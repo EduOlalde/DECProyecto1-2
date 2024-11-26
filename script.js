@@ -103,7 +103,7 @@ function iniciarJuego(){
 }
 
 /* Oculta la pantalla de introducción de usuario y muestra la pantalla de juego. 
-Recoge el nombre de usuario y reinicia el contador de tiradas */
+    - Recoge el nombre de usuario y reinicia el contador de tiradas */
 function pulsarJugar(){
     IU.pantallaLogin().style.display = "none";
     nombre = IU.nombreUsuario();
@@ -175,8 +175,8 @@ function nuevaPartida(){
 /*----- Generación y gestión de la IU -----*/
 
 /* Función que muestra la pantalla de juego al usuario.
-   Genera los elementos necesarios para la partida: tablero, gráficos,
-   y configura el mensaje y el botón de tirar el dado. */
+    - Genera los elementos necesarios para la partida: tablero, gráficos,
+    y configura el mensaje y el botón de tirar el dado. */
 function mostrarJuego(){
     IU.pantallaJuego().style.display = "flex";
     definirMensajeJuego();
@@ -193,8 +193,8 @@ function definirMensajeJuego(){
 }
 
 /* Genera el tablero de juego con un tamaño de x filas y y columnas.
-   Asigna un ID único a cada celda con el formato "-x-y" para facilitar su manejo. 
-   Elimina el tablero anterior si existe */
+    - Asigna un ID único a cada celda con el formato "-x-y" para facilitar su manejo. 
+    - Elimina el tablero anterior si existe */
 function generarTablero(x, y){
     if(IU.tablero()) IU.tablero().remove();
     const tablero = crearTabla(x,y);
@@ -222,9 +222,9 @@ function crearTabla(x, y){
 }
 
 /* Inserta los gráficos principales en el tablero:
-   - El objetivo se coloca en la última celda (objetivo del juego).
-   - El héroe se coloca en la primera celda (posición inicial).
-   Actualiza las posiciones iniciales de ambos elementos en sus respectivas variables. */
+    - El objetivo se coloca en la última celda (objetivo del juego).
+    - El héroe se coloca en la primera celda (posición inicial).
+    - Actualiza las posiciones iniciales de ambos elementos en sus respectivas variables. */
 function insertarGraficos(){
     // Identificar la última celda del tablero para colocar el objetivo.
     const ultimaCelda = IU.tablero().querySelector("tr:last-child td:last-child").id.split("-");
@@ -261,11 +261,11 @@ function insertarGraficos(){
 }
 
 /* Crea un contenedor que incluye un botón dinámico basado en los parámetros recibidos.
-   - contenedorID: ID para el contenedor.
-   - botonID: ID único para el botón.
-   - texto: Texto mostrado en el botón.
-   - funcionDisparada: Función que se ejecuta al pulsar el botón.
-   Devuelve el contenedor con el botón incluido. */
+    - contenedorID: ID para el contenedor.
+    - botonID: ID único para el botón.
+    - texto: Texto mostrado en el botón.
+    - funcionDisparada: Función que se ejecuta al pulsar el botón.
+    - Devuelve el contenedor con el botón incluido. */
 function generarBoton(contenedorID, botonID, texto, funcionDisparada){
     let contenedor = document.getElementById(contenedorID);
     if(!contenedor) {
@@ -286,24 +286,40 @@ function generarBoton(contenedorID, botonID, texto, funcionDisparada){
 /*----- Lógica del juego -----*/
 
 /* Simula el lanzamiento de un dado.
-   - Genera un número aleatorio entre 1 y 6.
-   - Actualiza la imagen del dado en la interfaz.
-   - Desactiva temporalmente el botón de tirar.
-   - Resalta las celdas disponibles según el número obtenido. */
+    - Desactiva temporalmente el botón de tirar.
+    - Genera un número aleatorio entre 1 y 6.
+    - Anima el cambio de caras del dado durante 1 segundo.
+    - Actualiza la imagen del dado con el resultado final.
+    - Resalta las celdas disponibles según el número obtenido. */
 function tirarDado(ev){
-    numeroTiradas += 1;
-    let tirada = parseInt(Math.random()*6 + 1);
-    IU.dado().src = `./img/dado${tirada}.png`;
-    
     ev.currentTarget.disabled = true;
-    resaltarCeldas(tirada);
+    numeroTiradas += 1;
+
+    const tirada = parseInt(Math.random()*6 + 1);
+
+    const duracionAnimacion = 1000; 
+    const intervalo = 100; // Tiempo de cambio entre imágenes en ms
+    let tiempoTranscurrido = 0;
+
+    const animacion = setInterval(() => {
+        const tiradaTemp = parseInt(Math.random() * 6 + 1); // Número temporal
+        IU.dado().src = `./img/dado${tiradaTemp}.png`; // Cambia la imagen temporalmente
+        tiempoTranscurrido += intervalo;
+
+        // Si el tiempo total se alcanza, se detiene la animación y muestra el resultado
+        if (tiempoTranscurrido >= duracionAnimacion) {
+            clearInterval(animacion); 
+            IU.dado().src = `./img/dado${tirada}.png`; 
+            resaltarCeldas(tirada); 
+        }
+    }, intervalo);
 }
 
 /* Resalta las celdas disponibles para mover el héroe.
-   - Toma el resultado de la tirada y calcula las celdas accesibles en las
-     direcciones vertical y horizontal (izquierda, derecha, arriba, abajo).
-   - Aplica la clase "celdaResaltada" a las celdas dentro del rango permitido.
-   - Evita errores al verificar que las celdas existan antes de aplicar la clase. */
+    - Toma el resultado de la tirada y calcula las celdas accesibles en las
+        direcciones vertical y horizontal (izquierda, derecha, arriba, abajo).
+    - Aplica la clase "celdaResaltada" a las celdas dentro del rango permitido.
+    - Evita errores al verificar que las celdas existan antes de aplicar la clase. */
 function resaltarCeldas(tirada){
     const direcciones =[[-1, 0], [1, 0], [0, -1], [0, 1]];
 
@@ -316,25 +332,25 @@ function resaltarCeldas(tirada){
 }
 
 /* Controlador para el evento de clic en el tablero.
-   - Selecciona la celda más cercana al evento
-   - Mueve el héroe a la celda seleccionada si es celdaResaltada. 
-   - Se comprueba que celda no sea null para evitar errores */
+    - Selecciona la celda más cercana al evento
+    - Mueve el héroe a la celda seleccionada si es celdaResaltada. 
+    - Se comprueba que celda no sea null para evitar errores */
 function controlClickMover(ev){
         let celda = ev.target.closest("td");
         if(celda && celda.classList.contains("celdaResaltada")) moverHeroe(celda);
 }
 
 /* Verifica si el héroe ha alcanzado el objetivo.
-   - Devuelve true si las posiciones coinciden, de lo contrario, false. */
+    - Devuelve true si las posiciones coinciden, de lo contrario, false. */
 function esVictoria(posicionHeroe, posicionObjetivo){
     return posicionHeroe[0] == posicionObjetivo[0] && posicionHeroe[1] == posicionObjetivo[1];
 }
 
 /* Mueve al héroe a la celda seleccionada.
-   - Elimina al héroe de su posición actual y lo agrega a la nueva celda.
-   - Actualiza las coordenadas del héroe.
-   - Verifica si se ha alcanzado el objetivo (objetivo) y ejecuta la función de victoria.
-   - Prepara el tablero para la próxima tirada. */
+    - Elimina al héroe de su posición actual y lo agrega a la nueva celda.
+    - Actualiza las coordenadas del héroe.
+    - Verifica si se ha alcanzado el objetivo (objetivo) y ejecuta la función de victoria.
+    - Prepara el tablero para la próxima tirada. */
 function moverHeroe(celda){
     const heroe = IU.heroe();
     heroe.remove();
@@ -350,8 +366,8 @@ function moverHeroe(celda){
 }
 
 /* Prepara el tablero para la próxima tirada.
-   - Limpia las celdas resaltadas eliminando su clase.
-   - Reactiva el botón de tirar. */
+    - Limpia las celdas resaltadas eliminando su clase.
+    - Reactiva el botón de tirar. */
 function esperarTirada(){
     const celdas = Array.from(document.getElementsByClassName("celdaResaltada"));
     celdas.forEach(celda => reiniciarCelda(celda));
@@ -359,7 +375,7 @@ function esperarTirada(){
 }
 
 /* Reinicia una celda resaltada.
-   - Elimina la clase "celdaResaltada". */
+    - Elimina la clase "celdaResaltada". */
 function reiniciarCelda(celda){
     celda.classList.remove("celdaResaltada");   
 }
@@ -367,20 +383,20 @@ function reiniciarCelda(celda){
 /*----- Almacenamiento y puntuaciones -----*/
 
 /* Serializa un mapa en una cadena de texto con formato 'clave=valor;'.
-   - Convierte las entradas del mapa en pares clave-valor separados por '='.
-   - Une los pares con ';' para formar la cadena final. */
+    - Convierte las entradas del mapa en pares clave-valor separados por '='.
+    - Une los pares con ';' para formar la cadena final. */
 function serializarMapa(mapa){
     return Array.from(mapa.entries()).map(par => par.join("=")).join(";");
 }
 
 /* Deserializa una cadena en formato 'clave=valor;' en un mapa.
-   - Divide la cadena en pares clave-valor y los almacena en un mapa. */
+    - Divide la cadena en pares clave-valor y los almacena en un mapa. */
 function deserializarMapa(cadena){
     return new Map(cadena.split(";").map(par => par.split("=")));
 }
 
 /* Recupera un mapa almacenado localmente.
-   - Devuelve un mapa vacío si no existe una entrada válida con la clave proporcionada. */
+    - Devuelve un mapa vacío si no existe una entrada válida con la clave proporcionada. */
 function recuperarMapaLocal(clave){
 
     let mapa = new Map();
@@ -393,7 +409,7 @@ function recuperarMapaLocal(clave){
 }
 
 /* Guarda un valor en el almacenamiento local.
-   - Maneja errores si el almacenamiento local no está accesible. */
+    - Maneja errores si el almacenamiento local no está accesible. */
 function guardarEnLocal(clave, valor){
     try{
         localStorage.setItem(`${clave}`, `${valor}`);
@@ -405,8 +421,8 @@ function guardarEnLocal(clave, valor){
 }
 
 /* Comprueba si un usuario tiene un récord.
-   - Compara el valor mínimo entre todas las puntuaciones almacenadas.
-   - Devuelve true si la puntuación del usuario es igual o menor al récord. */
+    - Compara el valor mínimo entre todas las puntuaciones almacenadas.
+    - Devuelve true si la puntuación del usuario es igual o menor al récord. */
 function esRecord(usuario){
     let mapaRecords = recuperarMapaLocal("recordTiradas");
     const record = Math.min(...Array.from(mapaRecords.values()));
