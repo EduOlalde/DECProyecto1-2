@@ -63,7 +63,7 @@ const IU = {
 
 };
 
-/* Valida el nombre de usuario y devuelve un mensaje de error `true` si es válido */
+/* Valida el nombre de usuario y devuelve un mensaje de error o `true` si es válido */
 function validarNombre(input){
     let mensaje = '';  
     if(!input) {
@@ -356,7 +356,6 @@ function esperarTirada(){
     const celdas = Array.from(document.getElementsByClassName("celdaResaltada"));
     celdas.forEach(celda => reiniciarCelda(celda));
     IU.botonTirar().disabled = false;
-    
 }
 
 /* Reinicia una celda resaltada.
@@ -371,39 +370,13 @@ function reiniciarCelda(celda){
    - Convierte las entradas del mapa en pares clave-valor separados por '='.
    - Une los pares con ';' para formar la cadena final. */
 function serializarMapa(mapa){
-
-    let itrMapa = mapa.entries();
-    let sigPar = itrMapa.next();
-    let aPar = [];
-
-    while(!sigPar.done){
-        aPar.push(sigPar.value);  
-        sigPar = itrMapa.next();
-    }
-
-    let aPar2 = [];
-
-    for (let i=0; i < aPar.length; i++){
-        aPar2.push(aPar[i].join("="));
-    }
-
-    let cadena = aPar2.join(";");
-
-    return cadena;
+    return Array.from(mapa.entries()).map(par => par.join("=")).join(";");
 }
 
 /* Deserializa una cadena en formato 'clave=valor;' en un mapa.
    - Divide la cadena en pares clave-valor y los almacena en un mapa. */
-function deserializarMapa(entrada){
-    let mapa = new Map();   
-    entrada = entrada.split(";");
-   
-    for(let el of entrada){
-        el = el.split("=");
-        mapa.set(el[0], el[1]);
-    }
-
-    return mapa;
+function deserializarMapa(cadena){
+    return new Map(cadena.split(";").map(par => par.split("=")));
 }
 
 /* Recupera un mapa almacenado localmente.
@@ -412,7 +385,7 @@ function recuperarMapaLocal(clave){
 
     let mapa = new Map();
 
-    if(localStorage.getItem(clave)!= "" && localStorage.getItem(clave) != null){
+    if(localStorage.getItem(clave)!= ("" || null)){
         mapa = deserializarMapa(localStorage.getItem(clave));
     }
 
