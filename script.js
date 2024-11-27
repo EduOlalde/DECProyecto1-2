@@ -90,7 +90,7 @@ function iniciarJuego(){
 
     if(validacion === true){
         IU.botonJugar().disabled = false; 
-        nombre = IU.nombreUsuario();
+        nombre = IU.nombreUsuario().trim(); // Recoge el nombre sin espacios al principio o fin
         mensaje.textContent = `Adéntrate en la cueva, ${nombre}, Gollum te necesita.`;
     }
     else{
@@ -106,12 +106,25 @@ function iniciarJuego(){
     - Recoge el nombre de usuario y reinicia el contador de tiradas */
 function pulsarJugar(){
     IU.pantallaLogin().style.display = "none";
-    nombre = IU.nombreUsuario();
     numeroTiradas = 0;
     mostrarJuego();
 }
 
 /*----- Finalización y reinicio -----*/
+
+/* Ordena un mapa por su valor, de menor a mayor */
+function ordenarMapa(mapa){
+    let entradas = Array.from(mapa);
+    entradas = entradas.sort((a, b) => a[1] - b[1]);
+
+    let mapaOrdenado = new Map();
+    for(let en of entradas){
+        mapaOrdenado.set(en[0], en[1]);
+    }
+
+    return mapaOrdenado;
+}
+
 /* Comprueba si el jugador ha mejorado su puntuación o es nuevo.
 En ese caso guarda las puntuaciones */
 function guardarPuntuacion(){
@@ -119,8 +132,11 @@ function guardarPuntuacion(){
 
     if(!ranking.get(nombre) || (ranking.get(nombre) >= numeroTiradas)) {
         ranking.set(`${nombre}`, `${numeroTiradas}`);
+        ranking = ordenarMapa(ranking); // Se ordena el mapa tras la nueva entrada
         guardarEnLocal("recordTiradas", serializarMapa(ranking));
     }
+
+    
 }
 
 /* Muestra el mensaje de victoria y los botones de fin de juego y registra la puntuación. */
@@ -300,7 +316,7 @@ function tirarDado(ev){
     const duracionAnimacion = 1000; 
     const intervalo = 100; // Tiempo de cambio entre imágenes en ms
     let tiempoTranscurrido = 0;
-
+/*
     const animacion = setInterval(() => {
         const tiradaTemp = parseInt(Math.random() * 6 + 1); // Número temporal
         IU.dado().src = `./img/dado${tiradaTemp}.png`; // Cambia la imagen temporalmente
@@ -308,11 +324,11 @@ function tirarDado(ev){
 
         // Si el tiempo total se alcanza, se detiene la animación y muestra el resultado
         if (tiempoTranscurrido >= duracionAnimacion) {
-            clearInterval(animacion); 
+            clearInterval(animacion); */
             IU.dado().src = `./img/dado${tirada}.png`; 
             resaltarCeldas(tirada); 
-        }
-    }, intervalo);
+ /*       }
+    }, intervalo);*/
 }
 
 /* Resalta las celdas disponibles para mover el héroe.
