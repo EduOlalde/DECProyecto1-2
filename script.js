@@ -316,7 +316,7 @@ function tirarDado(ev){
     const duracionAnimacion = 1000; 
     const intervalo = 100; // Tiempo de cambio entre imágenes en ms
     let tiempoTranscurrido = 0;
-/*
+
     const animacion = setInterval(() => {
         const tiradaTemp = parseInt(Math.random() * 6 + 1); // Número temporal
         IU.dado().src = `./img/dado${tiradaTemp}.png`; // Cambia la imagen temporalmente
@@ -324,11 +324,11 @@ function tirarDado(ev){
 
         // Si el tiempo total se alcanza, se detiene la animación y muestra el resultado
         if (tiempoTranscurrido >= duracionAnimacion) {
-            clearInterval(animacion); */
+            clearInterval(animacion); 
             IU.dado().src = `./img/dado${tirada}.png`; 
             resaltarCeldas(tirada); 
- /*       }
-    }, intervalo);*/
+        }
+    }, intervalo);
 }
 
 /* Resalta las celdas disponibles para mover el héroe.
