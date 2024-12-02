@@ -65,12 +65,20 @@ Flujo:
 
 Caso de Uso: Reiniciar juego (Nueva partida)
 - Actor: Jugador
-Descripción: El jugador inicia una nueva partida después de haber ganado o al finalizar el juego.
+Descripción: El jugador inicia una nueva partida al finalizar el juego.
 Flujo:
 	El jugador presiona el botón "Jugar de nuevo".
 	El sistema reinicia el estado del juego (nombre, número de tiradas, posiciones del héroe y objetivo).
 	El sistema restablece la pantalla de login y el formulario.
 	El jugador puede ingresar un nuevo nombre y comenzar de nuevo.
+
+Caso de Uso: Mostrar ranking
+- Actor: Jugador
+Descripción: El jugador muestra el ranking
+Flujo:
+	El jugador presiona el botón de "Mostrar ranking".
+	El sistema esconde el tablero de juego
+	El sistema muestra una tabla con las puntuaciones de todos los jugadores
 
 3. Almacenamiento de Puntuaciones
 
