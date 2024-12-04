@@ -57,6 +57,11 @@ body {
     position: relative;
 }
 
+#tablero td:hover {
+    background: linear-gradient(135deg, rgba(43, 39, 39, 0.4) 100%, transparent 70%);
+    z-index: 2;
+}
+
 #tablero td img {
     width: 100%;
     height: 100%;
@@ -127,6 +132,11 @@ button:disabled {
 #tablero .celdaResaltada {
     background: linear-gradient(135deg, rgba(255, 0, 0, 0.3) 50%, transparent 70%);
     z-index: 1;
+}
+
+#tablero .celdaResaltada:hover {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.3) 100%, transparent 70%);
+    z-index: 3;
 }
 
 #ranking {
